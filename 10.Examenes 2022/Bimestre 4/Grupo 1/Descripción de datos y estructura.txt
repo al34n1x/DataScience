@@ -1,0 +1,285 @@
+Un cliente puede ser una persona fisica o juridica que puede tener 1 o mas servicios de diferente tipo.
+Los servicios se asocian a cuentas de cobro que es donde van a impactar las facturas que se generen.
+Un cliente puede tener varias cuantas de cobro segun decida la empresa como quiere gestionar los saldos.
+En nuestra empresa, tenemos una cuenta de cobro que agrupa los servicios de las localidad de Pinamar, Ostende y Valeria del Mar, 
+otra para los servicios de Madariaga, otra para los servicios de San Clemente y otra para los de Santa Teresita.
+Cuando un cliente tiene un saldo deudor y pasan cierta cantidad de dias de vencido, se realiza el corte de los servicios asociados a esa cuenta de cobro.
+Un servicio puede tener subservicios. Cada servicio tiene su ubicacion geografica con coordenadas x e y de google maps. 
+Esos servicios y subservicios se venden a traves de los productos comerciales
+Podemos registrar reclamos asociados a los servicios los cuales tienen una fecha de registracion y una de finalizacion del mismo.
+Tanto los clientes como las cuentas de cobro y los servicios pueden pasar por diferentes estados. La historia de esos cambios de estados esta concentrada 
+en la tabla llamada BUSINESS_BOHistorico
+
+ 
+tabla: BP_EstadoCliente
+descripcion: definida como business parameters que contiene los posibles estados en los que puede estar un cliente
+columnas
+	id: contiene un entero que identifica univocamente al estado del cliente y es clave primaria
+    codigo: string que contiene el codigo asociado al estado del cliente con valor unico en la tabla
+    descripcion: string que contiene la descipcion del estado del cliente
+    BTRangoFecha_fechaDesde: fecha que indica desde cuando un estado esta vigente
+    BTRangoFecha_fechaHasta: fecha que indica hasta cuando un estado esta vigente. Si contiene null significa que el estado esta vigente en este momento.
+    alta: entero que contiene 1 al estado que corresponde con alta
+    baja: entero que contiene 1 al estado que corresponde con baja
+    Activo:  entero que contiene 1 en los estados que se consideran activos y 0 en los que no como por ejemplo Baja.
+
+tabla: CLI_Cliente
+descripcion: contiene todos los clientes de la empresa
+columnas    
+	id: contiene un entero que identifica univocamente al cliente y es clave primaria
+    estado: entero que contiene el id del estado en el cual esta actualmente el cliente
+    numeroCliente: entero unico que contiene un numero de cliente
+    fechaDesde: fecha que indica la fecha de ingreso del cliente a la empresa
+    fechaHasta: fecha que indica la fecha de baja del cliente a la empresa
+    fechaEstado: fecha que indica desde cuando el cliente se encuentra en el estado actual
+	DISCRIMINATOR: string que indica si el cliente corresponde a una persona fisica o juridica
+
+tabla: BP_TipoCuentaCobro
+descripcion: definida como business parameters que contiene los posibles tipos de cuenta de cobro
+columnas
+    id: contiene un entero que identifica univocamente al tipo de cuenta de cobro y es clave primaria
+    codigo: string que contiene el codigo asociado al tipo de cuenta de cobro con valor unico en la tabla
+    descripcion: string que contiene la descipcion del tipo de cuenta de cobro
+    vigencia_desde: fecha que indica desde cuando un tipo de cuenta de cobro esta vigente
+    vigencia_hasta: fecha que indica hasta cuando un tipo de cuenta de cobro esta vigente. Si contiene null significa que el tipo de cuenta de cobro esta vigente en este momento.
+    isRefinanciable: entero que contiene 1 al tipo de cuenta de cobro que se puede refinanciar, es decir que se puede realizar un plan de pagos de la deuda
+    cantidadPermitida: entero que indica la cantidad que un cliente puede tener de este tipo de cuenta de cobro
+    financiacion: entero que contiene 1 si es de tipo financiacion
+    CantDiasPerCorte: entero que indica la cantidad de dias de vencido el saldo que se realiza el primer corte por falta de pago
+    CantDiasSdoCorte: entero que indica la cantidad de dias de vencido el saldo que se realiza el segundo corte por falta de pago
+    CantDiasVencido: entero que indica la cantidad de dias que tiene que estar vendido el saldo para que se condidere como vencido. Algunos casos en el mismo dia y en otros al otro dia.
+
+tabla: BP_EstadoTipoCtaCobro
+descripcion: definida como business parameters que contiene los estados de corte posibles de las cuenta de cobro
+columnas
+    id: contiene un entero que identifica univocamente al estados de corte de las cuenta de cobro y es clave primaria
+    codigo: string que contiene el codigo asociado al estados de corte de la cuenta de cobro con valor unico en la tabla
+    descripcion: string que contiene la descipcion del estado de corte de la cuenta de cobro
+    vigencia_desde: fecha que indica desde cuando un estado de corte de la cuenta de cobro esta vigente
+    vigencia_hasta: fecha que indica hasta cuando un estado de corte de la cuenta de cobro esta vigente. Si contiene null significa que el estado de corte de cuenta de cobro esta vigente en este momento.
+    cambioManual: entero que contiene 1 si se puede pasar a este estado manualmente o solo se va a pasar automaticamente
+    primerCorte: entero que contiene 1 si es el primer corte
+    segundoCorte: entero que contiene 1 si es el segundo corte 
+    Activo: entero que contiene 1 si es un estado activo, es decir que esta conectado y 0 si corresponde al estado alta o baja
+
+tabla: BP_EstadoCuentaCobro
+descripcion: definida como business parameters que contiene los estados de las cuenta de cobro
+columnas
+    id: contiene un entero que identifica univocamente al estados de las cuenta de cobro y es clave primaria
+    codigo: string que contiene el codigo asociado al estados de la cuenta de cobro con valor unico en la tabla
+    descripcion: string que contiene la descipcion del estado de la cuenta de cobro
+    BTRangoFecha_fechaDesde: fecha que indica desde cuando un estado de la cuenta de cobro esta vigente
+    BTRangoFecha_fechaHasta: fecha que indica hasta cuando un estado de la cuenta de cobro esta vigente. Si contiene null significa que el estado de cuenta de cobro esta vigente en este momento.
+    activa: entero que contiene 1 si es un estado activo, es decir que no esta dado de baja
+    estadoTipoCuentaCobro: contiene el id del estado de corte de cuenta de cobro que va a aplicar cuando pase a este estado de cuenta de cobro
+
+tabla: BP_EstadoServicio
+descripcion: definida como business parameters que contiene los estados de los servicios
+columnas
+    id: contiene un entero que identifica univocamente al estados del servicio
+    codigo: string que contiene el codigo asociado al estados del servicio con valor unico en la tabla
+    descripcion: string que contiene la descipcion del estado del servicio
+    BTRangoFecha_fechaDesde: fecha que indica desde cuando un estado del servicio esta vigente
+    BTRangoFecha_fechaHasta: fecha que indica hasta cuando un estado del servicio esta vigente. Si contiene null significa que el estado del servicio esta vigente en este momento.
+    habilitado: entero que contiene 1 si es el estado habilitado
+    deshabilitado: entero que contiene 1 si es el estado deshabilitado
+    alta: entero que contiene 1 si es si es el estado alta
+    baja: entero que contiene 1 si es  si es el estado baja
+    Activo: entero que contiene 1 si es un estado activo, es decir que esta funcionando y no esta ni en alta ni en baja
+
+tabla: BP_TipoServicio
+descripcion: definida como business parameters que contiene los tipos de servicios
+columnas
+    id: contiene un entero que identifica univocamente al tipo de servicio
+    codigo: string que contiene el codigo asociado al tipo de servicio con valor unico en la tabla
+    descripcion: string que contiene la descipcion del tipo de servicio
+    aceptaReclamos: entero que contiene 1 si se puede registrar reclamos sobre este tipo de servicio
+    aceptaRecursosTecnicos: entero que contiene 1 si se puede asignar recursos tecnicos sobre este tipo de servicio
+    BTRangoFecha_fechaDesde: fecha que indica desde cuando un tipo de servicio esta vigente
+    BTRangoFecha_fechaHasta: fecha que indica hasta cuando un tipo de servicio esta vigente. Si contiene null significa que el tipo de servicio esta vigente en este momento.
+    discriminator: string que indica si es un Servicio o subservicio
+    esTelefonia: entero que contiene 1 si es si es un servicios de telefonia
+    TipoServicioContenedor: contiene el id de tipo de servicio que contiene a este tipo de servicio
+    EsTipoServicioContenedor: entero que contiene 1 si este tipo de servicio es contenedor
+
+tabla: BP_EstadoServicio_BPTipoServicio
+descripcion: definida como business parameters que contiene la relacion entre los posibles estados de cada tipo de servicio 
+y los estados de corte de la cuenta de cobro. Esto sirve para que al aplicar algun corte en la cuenta de cobro, 
+se realice el corte indicado en cada tipo de servicio
+columnas
+    id_EstadoServicio: id del estado del servicio
+    id_TipoServicio: id del tipo de servicio
+    id: contiene un entero que identifica univocamente a esta relacion
+    id_EstadoTipoCtaCobro: id del estado de corte de la cuenta de cobro
+
+tabla: BP_Moneda
+descripcion: definida como business parameters que contiene los tipos de monedas
+columnas
+    id: contiene un entero que identifica univocamente al tipo de moneda
+    codigo: string que contiene el codigo asociado al tipo de moneda con valor unico en la tabla
+    descripcion: string que contiene la descipcion del tipo de moneda
+    BTRangoFecha_fechaDesde datetime: fecha que indica desde cuando un tipo de moneda esta vigente
+    BTRangoFecha_fechaHasta datetime: fecha que indica hasta cuando un tipo de moneda esta vigente. Si contiene null significa que el tipo de moneda esta vigente en este momento.
+
+tabla: CTACTES_CuentaCobro
+descripcion: contiene las cuentas de cobro
+columnas
+    id: contiene un entero que identifica univocamente a la cuenta de cobro
+    numeroCuenta: entero que contiene el numero de cuenta para un cliente
+    valor: numeric que contiene el saldo total de la cuenta de cobro
+    moneda: id del tipo de moneda
+    estado: id del estado de cuenta de cobro
+	cliente: id del cliente al que pertenece esta cuenta de cobro
+    tipoCuentaCobro: id del tipo de cuenta de cobro al que pertenece
+    estadoGestionCobro: id del estado de corte en el que se encuentra la cuenta de cobro
+    fechaEstado: fecha que indica desde cuando esta en el estado actual
+    fechaEstadoGestionCobro: fecha que indica desde cuando esta en el corte actual
+    numeroCliente: entero con el numero de cliente al cual pertenece
+    debitoAutomatico: entero que contiene 1 si la cuenta de cobro tiene debito automatico
+
+tabla: BP_TipoMovimiento
+descripcion: definida como business parameters que contiene los tipos de movimientos de cuenta de cobro
+columnas
+    id: contiene un entero que identifica univocamente a la cuenta de cobro
+    codigo: string que contiene el codigo asociado al tipo de movimiento con valor unico en la tabla
+    descripcion: string que contiene la descipcion del tipo de movimiento
+    BTRangoFecha_fechaDesde: fecha que indica desde cuando un tipo de movimiento esta vigente
+    BTRangoFecha_fechaHasta: fecha que indica hasta cuando un tipo de movimiento esta vigente. Si contiene null significa que el tipo de movimiento esta vigente en este momento.
+
+tabla: CTACTES_CuentaCobroMovimiento
+descripcion: contiene los movimientos de las cuentas de cobro, que pueden de dos tipos, debito o credito
+columnas
+    id: contiene un entero que identifica univocamente a los movimientos de cuenta de cobro
+    fechaMovimiento: fecha del movimiento
+    fechaRegistracion: fecha que indica cuando se registra el movimiento
+    fechaVencimiento: fecha que indica cuando vence este movimiento. Puede ser futura para el caso de las FC y pasada si se registra un pago que el cliente realizó dias atras.
+    valor: numerico positivo que contiene el importe 
+    moneda: id del tipo de moneda en la que esta expresado el importe
+    tipoMovimiento: id del tipo de movimiento. Puede ser debito o credito
+    cuentaCobro: id de la cuenta de cobro a la cual pertenece este movimiento
+    comprobante: id del comprobante que dio origen a este movimiento
+    descripcion: string que contiene la descripcion del movimiento
+    saldoAFecha: numero que contiene el saldo hasta la fecha de registracion del movimiento
+    MonedaSaldoAFecha: id del tipo de moneda en la que esta expresado el saldo
+
+tabla: COMERCIAL_ProductoComercial
+descripcion: contiene los productos comerciales
+columnas
+    id: contiene un entero que identifica univocamente al producto comercial
+    codigo: string que contiene el codigo del producto comercial
+    nombre: string que contiene el nombre del producto comercial
+    descripcion: string que contiene la descripcion del producto comercial
+    BTRangoFecha_fechaDesde datetime: fecha que indica desde cuando un producto comercial esta vigente
+    BTRangoFecha_fechaHasta: fecha que indica hasta cuando un producto comercial esta vigente. Si contiene null significa que el producto comercial esta vigente en este momento.
+
+tabla: SERVICIOS_Servicio
+descripcion: contiene los productos comerciales
+columnas
+    id: contiene un entero que identifica univocamente al servicio
+    discriminator: string que indica si es servicio o subservicio
+    tipoServicio: id del tipo de servcio al cual pertenece
+    estado: id del estado en el cual se encuentra el servicio
+    fechaInstalacion: fecha en la cual se instalo el servicio
+    cuentacobro: id de la cuenta de cobro a la cual pertenece el servicio
+    productoActual: id del producto comercial que le corresponde actualmente
+    servicioPadre: en el caso de los subservicios contiene el id de servicio que es el padre
+    fechaEstado: fecha que indica desde cuando esta en el estado actual 
+    servicioContenedor: indica cual es el servici contenedor. Esto se usa solo para servicios de casos especiales que ademas de tener un servicio padre tienen un contenedor
+    LocalidadStr: string con el nombre de la localidad
+	SeccionManzana: string con el lote catastral
+	puntoCentroGoogleMaps_x: float con la coordenada x de google maps
+    puntoCentroGoogleMaps_y: float con la coordenada y de google maps
+
+tabla: BP_TipoRecursoTecnico
+descripcion: definida como business parameters que contiene los tipos de recursos tecnicos, que serian diferentes dispositivos o elementos de la red de fibra o cobre
+columnas
+    id: contiene un entero que identifica univocamente al tipo de recurso tecnico
+    codigo: string que contiene el codigo asociado al tipo de recurso tecnico con valor unico en la tabla
+    descripcion: string que contiene la descipcion del tipo de recurso tecnico
+    contenedorRecursos: : entero que contiene 1 si este tipo es contenedor de otros recursos tecnicos
+    BTRangoFecha_fechaDesde: fecha que indica desde cuando un tipo de recurso tecnico esta vigente
+    BTRangoFecha_fechaHasta: fecha que indica hasta cuando un tipo de recurso tecnico esta vigente. Si contiene null significa que el tipo de recurso tecnico esta vigente en este momento.
+
+tabla: BP_EstadoRecursoTecnico
+descripcion: definida como business parameters que contiene los estados posibles de los recursos tecnicos
+columnas
+    id: contiene un entero que identifica univocamente al estado de recurso tecnico
+    codigo: string que contiene el codigo asociado al estado de recurso tecnico con valor unico en la tabla
+    descripcion: string que contiene la descipcion del estado de recurso tecnico
+    anulado: entero que contiene 1 si es si es el estado anulado
+    enUso: entero que contiene 1 si es si es el estado enUso
+    libre: entero que contiene 1 si es si es el estado libre
+    proyectado: entero que contiene 1 si es si es el estado proyectado
+    ocupado: entero que contiene 1 si es si es el estado ocupado
+    tipoRecursoTecnico: no se usa. Todos los valores son nulos 
+    BTRangoFecha_fechaDesde: fecha que indica desde cuando un estado de recurso tecnico esta vigente
+    BTRangoFecha_fechaHasta: fecha que indica hasta cuando un estado de recurso tecnico esta vigente. Si contiene null significa que el estado de recurso tecnico esta vigente en este momento.
+    asignable: entero que contiene 1 si los recursos que estan en este estado se pueden asignar a un servicio.
+    Activo: entero que contiene 1 si es si es un estado activo
+    recuperado: entero que contiene 1 si es si es el estado recuperado
+
+tabla: TECNICA_RecursoTecnico
+descripcion: contiene los recursos tecnicos, que son los disositivos o elementos de l red de fibra o cobre que se pueden identificar y algunos de ellos asignar a los servicios
+columnas
+    id: contiene un entero que identifica univocamente al recurso tecnico
+    estado: id del estado en el cual se encuentra el recurso tecnico
+    recursoContenedor: id del recurso tecnico que contiene a este
+    tipoRecursoTecnico: id del tipo de recurso tecnico al cual pertenece
+    nombre: string con el nombre de este recurso tecnico
+    discriminator: string que contiene si es un recurso generador de servicio como son los servidores o simplemente un recurso tecnico
+    nombreLogico: string con el nombre logico que muchas veces es un nombre de ubicacion del recurso tecnico
+    fechaEstado: fecha que indica desde cuando esta en el estado actual 
+    nombreCompleto: string que contiene el la concatenacion del nombre completo del contenedor mas el nombre de este recurso tecnico
+    observaciones: string en el cual puede contener alguna observacion de este recurso tecnico
+    Atributo1: string que puede contener un atributo del recurso tecnico
+    Atributo2: string que puede contener otro atributo del recurso tecnico
+
+tabla: TECNICA_RecursosTecnicos_Servicios
+descripcion: contiene los recursos tecnicos que estan asignados a los servicios
+columnas
+    id_Recurso: id de recurso tecnico
+    id_Servicio: id del servicio
+	
+tabla: BUSINESS_BOHistorico
+descripcion: contiene el historico de cambios de estados de los clientes, cuentas de cobro y servicios
+columnas
+    id: contiene un entero que identifica univocamente el historico de cambio de estado
+    date: fecha en la cual se realizo el cambio de estado
+    description: string con la descripcion de ese cambio de estado
+    newStateName: string correspondiente a la descripcion del nuevo estado
+    oldStateName: string correspondiente a la descripcion del viejo estado
+    servicio: id del servicio que cambia de estado
+    cliente: id del cliente que cambia de estado
+    cuentacobro: id de la cuenta de cobro que cambia de estado
+    SPDName: string con el nombre del diagramas de los estados posibles
+    anulado: entero que contiene 1 si es si el cambio de estado esta anulado
+
+tabla: BP_TipoOperacion
+descripcion: definida como business parameters que contiene los diferentes tipos de operaciones entre las que se encuentran los reclamos
+columnas
+    id: contiene un entero que identifica univocamente al tipo de operacion
+    codigo: string que contiene el codigo asociado al tipo de operacion
+    descripcion: string con la descripcion del tipo de operacion
+    BTRangoFecha_fechaDesde: fecha que indica desde cuando un tipo de operacion esta vigente
+    BTRangoFecha_fechaHasta: fecha que indica hasta cuando un tipo de operacion esta vigente. Si contiene null significa que el tipo de operacion esta vigente en este momento.
+
+tabla: TRAMITE_Operacion
+descripcion: contiene las operaciones registradas. Tomamos solo los reclamos registrados
+columnas
+    id: contiene un entero que identifica univocamente a la operacion
+    tipoOperacion: id del tipo de operacion a la cual pertenece
+    numero: entero con el numero de operacion.
+    fechaFin: fecha que indica la finalizacion de la operacion
+    servicio: id de servicio al cual pertenece
+    fechaInicio: fecha que indica el inciio de la operacion
+
+tabla: COMERCIAL_ProductoServicio
+descripcion: contiene el historico de detalles de productos asociados a los servicios
+columnas
+    id: contiene un entero que identifica univocamente al detalle del historico de productos con servicios
+    productoComercial: id del producto comercial
+    vigencia_desde: fecha desde la cual ese producto esta activo para ese servicio
+    vigencia_hasta: fecha hasta la cual ese producto estuvo activo para ese servicio. Si es nulo significa que ese product es el que actualmente tiene el servicio
+    servicioAbs: id de servicio o subservicio
+    discriminator: string con el discriminador del tipo de detalle de producto el cual puede ser servicio, subservicio o plan de tasacion usado en bonificaciones
+
